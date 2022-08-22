@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+<script>
+    const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+    const cityData =[]
+    fetch(endpoint).
+        then(blob => blob.json()).
+        then(data => {
+          cityData.push(...data)
+        })
+    function findMatches(cityData, searchString){
+      const regex = new RegExp(searchString,'gi')
+      return cityData.filter( data => data.city.match(regex) || data.state.match(regex))
+    }
+
+    function displayMatches(event){
+      console.log(this.value)
+      const matches = findMatches(cityData,this.value)
+      const suggestions = document.querySelector('.suggestions')
+      
+      const html = matches.map(element => {
+        const regex =new RegExp(this.value,'gi')
+        const city = element.city.replace(regex,`<span class="hl">${this.value}</span>`)
+        const state = element.state.replace(regex,`<span class="hl">${this.value}</span>`)
+       
+        return `<li><span class="state">${city}, ${state}</span>
+          <span class="population">${element.population}</span></li>`
+      }).join('');
+
+      suggestions.innerHTML = html;
+    }
+
+    const searchEle = document.querySelector('.search')
+    searchEle.addEventListener('keyup', debounce(displayMatches,500))
+
+    function debounce(func, timeout=400){
+      let timer 
+      return function(...args){
+        clearTimeout(timer)
+        timer = setTimeout(function(){
+          clearTimeout(timer)
+          func.apply(searchEle,args)
+        },timeout)
+      }
+    }
+
+
+</script>
+</body>
+</html>
+
